@@ -65,4 +65,8 @@ const getVideo = asyncHandler(async(req,res)=>{
     )
 })
 
+const getAllVideos = asyncHandler(async(req,res)=>{
+    
+})
+
 export { publishVideo, getVideo }
