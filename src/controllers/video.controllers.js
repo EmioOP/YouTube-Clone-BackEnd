@@ -65,4 +65,4 @@ const getVideo = asyncHandler(async(req,res)=>{
     )
 })
 
-export { publishVideo }
+export { publishVideo, getVideo }
