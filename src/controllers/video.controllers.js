@@ -67,6 +67,23 @@ const getVideo = asyncHandler(async(req,res)=>{
 
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
-}
+})
+
+
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: update video details like title, description, thumbnail
+
+})
+
+const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: delete video
+})
+
+
+const togglePublishStatus = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+})
 
 export { publishVideo, getVideo }
