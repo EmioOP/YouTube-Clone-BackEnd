@@ -20,6 +20,7 @@ app.use(cookieParser())
 import healthCheckRouter from "./routes/healthCheck.routes.js"
 import userRouter from "./routes/user.routes.js"
 import videoRouter from "./routes/video.routes.js"
+import tweetRouter from "./routes/tweet.routes.js"
 
 
 
@@ -29,6 +30,8 @@ import videoRouter from "./routes/video.routes.js"
 app.use("/api/v1/healthCheck",healthCheckRouter)
 app.use("/api/v1/users",userRouter)
 app.use("/api/v1/videos",videoRouter)
+app.use("/api/v1/tweets",tweetRouter)
+
 
 
 export { app }
