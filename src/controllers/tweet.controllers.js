@@ -29,3 +29,30 @@ const addTweet = asyncHandler(async(req,res)=>{
     )
 })
 
+const getUserTweets = asyncHandler(async (req, res) => {
+    if(!isValidObjectId(req.user._id)){
+        throw new ApiError(400,"Unauthorized request")
+    }
+
+    const userTweets = await Tweet.find({
+        owner:req.user?._id
+    })
+
+    if(!userTweets){
+        throw new ApiError(400,"Unable to fetch tweets")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,userTweets,"user tweets fetched succefully")
+    )
+})
+
+const updateTweet = asyncHandler(async (req, res) => {
+    //TODO: update tweet
+})
+
+const deleteTweet = asyncHandler(async (req, res) => {
+    //TODO: delete tweet
+})
