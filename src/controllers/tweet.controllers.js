@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Tweet } from "../models/tweet.models.js";
@@ -30,9 +30,9 @@ const addTweet = asyncHandler(async (req, res) => {
 })
 
 const getUserTweets = asyncHandler(async (req, res) => {
-    const {userId} = req.params
+    const { userId } = req.params
     if (!isValidObjectId(userId)) {
-        throw new ApiError(400, "Unauthorized request")
+        throw new ApiError(400, "valid user id is required")
     }
 
     const userTweets = await Tweet.find({
@@ -50,54 +50,90 @@ const getUserTweets = asyncHandler(async (req, res) => {
         )
 })
 
-const updateTweet = asyncHandler(async (req, res) => {
-    const {content} = req.body
-    const {tweetId} = req.params
-    if(!isValidObjectId(tweetId)){
-        throw new ApiError(400,"invalid tweet id")
+const getTweetById = asyncHandler(async (req, res) => {
+    const { tweetId } = req.params
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "invalid tweet id")
     }
 
     const tweet = await Tweet.findById(tweetId)
 
-    if(tweet.owner !== req.user?._id){
-        throw new ApiError(400,"Unauthorized request")
+    if (!tweet) {
+        throw new ApiError(400, "Invalid tweet id Or unable to fetch tweet")
     }
 
-    tweet.content = content
-    const updatedTweet = await tweet.save()
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200,updatedTweet,"tweet updated successfully")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, tweet, "tweet fetched successfully")
+        )
+})
+
+const updateTweet = asyncHandler(async (req, res) => {
+    const { content } = req.body
+    const { tweetId } = req.params
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "invalid tweet id")
+    }
+
+    if (!req.user?._id) {
+        throw new ApiError(400, "Unauthorized request")
+    }
+
+    const updatedTweet = await Tweet.findOneAndUpdate({
+        _id: tweetId,
+        owner: req.user._id
+    }, {
+        content
+    }, {
+        new: true
+    })
+
+    if (!updateTweet) {
+        throw new ApiError(500, "Unable to update tweet")
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, updatedTweet, "tweet updated successfully")
+        )
 
 })
 
 const deleteTweet = asyncHandler(async (req, res) => {
-    const {tweetId} = req.params
-    if(!isValidObjectId(tweetId)){
-        throw new ApiError(400,"invalid tweet id")
+    const { tweetId } = req.params
+    if (!isValidObjectId(tweetId)) {
+        throw new ApiError(400, "invalid tweet id")
     }
 
-    const tweet = await Tweet.findById(tweetId)
-
-    if(tweet.owner !== req.user?._id){
-        throw new ApiError(400,"Unauthorized request")
+    if (!req.user?._id) {
+        throw new ApiError(400, "Unauthorized request")
     }
 
-    await tweet.remove()
+    const deletedTweet = await Tweet.deleteOne({
+        _id: tweetId,
+        owner: req.user._id
+    })
+
+    if (!deletedTweet) {
+        throw new ApiError(400, "Unable to fetch tweet")
+    }
+
+
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200,{},"tweet removed")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, deletedTweet, "tweet removed")
+        )
 })
 
 export {
     addTweet,
     getUserTweets,
+    getTweetById,
     updateTweet,
     deleteTweet
 }

@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import mongoose, { isValidObjectId } from "mongoose";
@@ -80,6 +80,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
     const { playlistId, videoId } = req.params
 
+
     if (!isValidObjectId(playlistId)) {
         throw new ApiError(400, "invalid playlist id")
     }
@@ -87,20 +88,23 @@ const addVideoToPlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(400, "invalid playlist id")
     }
 
-    const playlist = await Playlist.findById(playlistId)
-
-    if (!playlist) {
-        throw new ApiError(404, "playlist not found")
+    if (!req.user?._id) {
+        throw new ApiError(400, "Unauthorized request")
     }
 
-    const video = await Video.findById(videoId)
+    const playlist = await Playlist.findOne({
+        _id:playlistId,
+        owner:req.user._id
+    })
+
+    if (!playlist) {
+        throw new ApiError(404, "Unauthorized request or playlist not found")
+    }
+
+    const video = await Video.exists({_id:videoId})
 
     if (!video) {
         throw new ApiError(404, "video not found")
-    }
-
-    if (playlist.owner !== req.user?._id) {
-        throw new ApiError(400, "Unauthorized request")
     }
 
     playlist.videos.push(videoId)
@@ -207,7 +211,6 @@ const deletePlaylist = asyncHandler(async (req, res) => {
         .json(
             new ApiResponse(200, deletedPlaylist, "Playlist deleted")
         )
-
 
 })
 

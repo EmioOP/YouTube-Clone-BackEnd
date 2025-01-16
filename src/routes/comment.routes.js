@@ -11,7 +11,7 @@ import {
 const router = Router()
 
 router.route("/:videoId").get(getAllComment)
-router.route("/comment/:videoId").post(verifyJWT, addComment)
+router.route("/comment/add/:videoId").post(verifyJWT, addComment)
 router.route("/comment/:commentId")
     .get(getComment)
     .patch(verifyJWT, updateComment)

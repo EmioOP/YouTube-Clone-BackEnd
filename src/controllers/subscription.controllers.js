@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import mongoose, { isValidObjectId } from "mongoose";
@@ -58,7 +58,7 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                 from:"users",
                 localField:"subscriber",
                 foreignField:"_id",
-                as:"subcriber"
+                as:"subscriber"
             }
         },
         {

@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
-
+import mongoose from "mongoose"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -107,7 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     //check for the user with this username or email
-    const user = User.findOne({
+    const user = await User.findOne({
         $or: [{ username }, { email }]
     })
 
@@ -117,9 +117,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //check for the passwored
 
-    const isPasswordCorrect = await user.isPasswordCorrect(password)
+    const checkPasswordCorrect = await user.isPasswordCorrect(password)
 
-    if (!isPasswordCorrect) {
+    if (!checkPasswordCorrect) {
         throw new ApiError(400, "Incorrect Password")
     }
 
@@ -243,7 +243,6 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 })
 
-
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
@@ -301,11 +300,14 @@ const changeUserAvatar = asyncHandler(async (req, res) => {
 
     const avatarLocalPath = req.file?.path
 
+
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar is required")
     }
 
     const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+
     if (!avatar.url) {
         throw new ApiError(500, "Error while uploading avatar")
     }
@@ -369,9 +371,11 @@ const changeUserCoverImage = asyncHandler(async (req, res) => {
 const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { username } = req.params
 
+
     if (!username?.trim()) {
         throw new ApiError(400, "Username is required")
     }
+
 
     const channel = await User.aggregate([
         {
@@ -400,9 +404,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 subscriberCount: { $size: "$subscribers" },
                 channelSubscribedToCount: { $size: "$subscribedTo" },
                 isSubscribed: {
-                    if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                    then: true,
-                    else: false
+                    $cond: {
+                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+                        then: true,
+                        else: false
+                    }
+
                 }
             }
         },
@@ -420,7 +427,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         }
     ])
 
-    console.log(channel)
+
 
     if (!channel?.length) {
         throw new ApiError(404, "channel not found")
@@ -479,14 +486,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     ])
 
     if (!user?.length) {
-        throw new ApiError(404,"watch history not fetched")
+        throw new ApiError(404, "watch history not fetched")
     }
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200,user[0]?.watchHistory,"watch history fetched")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, user[0]?.watchHistory, "watch history fetched")
+        )
 })
 
 

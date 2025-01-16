@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { Comment } from "../models/comment.models.js";
@@ -141,7 +141,7 @@ const deleteComment = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Unauthorized request")
     }
 
-    const comment = await Comment.findOne({
+    const comment = await Comment.findOneAndDelete({
         _id:commentId,
         owner:req.user?._id
     })
@@ -150,7 +150,6 @@ const deleteComment = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Unauthorized request of deleting comment") 
     }
 
-    await comment.remove()
 
     return res
     .status(200)

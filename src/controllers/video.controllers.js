@@ -26,12 +26,12 @@ const publishVideo = asyncHandler(async (req, res) => {
     const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
 
     const video = await Video.create({
-        videoFile: videoFile,
-        thumbnail: thumbnail,
+        videoFile: videoFile.url,
+        thumbnail: thumbnail.url,
         title,
         description: description,
         views: 0,
-        duration: videoFile.duration,
+        duration: videoFile?.duration,
         isPublished: true,
         owner: req.user?._id
     })
@@ -79,7 +79,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
     }
 
     if (userId) {
-        filter.own = userId
+        filter.owner = userId
     }
 
     const sortOptions = {}
@@ -92,19 +92,19 @@ const getAllVideos = asyncHandler(async (req, res) => {
         .skip(skip)
         .limit(limit)
 
-    if(videos.length === 0){
-        throw new ApiError(404,"No videos Found")
+    if (videos.length === 0) {
+        throw new ApiError(404, "No videos Found")
     }
 
-    if(!videos){
-        throw new ApiError(500,"Unable to fetch videos")
+    if (!videos) {
+        throw new ApiError(500, "Unable to fetch videos")
     }
 
     return res
-    .status(200)
-    .json(
-        new ApiResponse(200,videos,"Video fetched successfully")
-    )
+        .status(200)
+        .json(
+            new ApiResponse(200, videos, "Video fetched successfully")
+        )
 
 })
 
@@ -116,9 +116,12 @@ const updateVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid Video id")
     }
 
-    const video = await Video.findById(videoId)
+    const video = await Video.findOne({
+        _id: videoId,
+        owner: req.user?._id
+    })
 
-    if (video.owner !== req.user._id) {
+    if (!video) {
         throw new ApiError(400, "Invalid request, no permission for this")
     }
 
@@ -129,7 +132,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     return res
         .status(200)
         .json(
-            new ApiResponse(200, updateVideo, "video updated successfully")
+            new ApiResponse(200, updatedVideo, "video updated successfully")
         )
 
 })
@@ -143,19 +146,32 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(videoId)
 
-    if (!video || video.owner !== req.user._id) {
-        throw new ApiError(400, "Invalid request")
+    if(!video){
+        throw new ApiError(400,"uanble to find video")
     }
 
+    function extractPublicId(url) {
+        const match = url.match(/\/upload\/(?:v[0-9]+\/)?([^\.]+)/);
+        return match ? match[1] : null;
+    }
+
+
     try {
-        if (video.videoFile?.public_id) {
-            await deleteFromColudinary(video.videoFile.public_id)
+        if (video.videoFile?.url) {
+            const url = video.videoFile.url
+            const public_id = extractPublicId(url);
+            await deleteFromColudinary(public_id)
         }
-        if (video.thumbnail?.public_id) {
-            await deleteFromColudinary(video.thumbnail.public_id)
+        if (video.thumbnail?.url) {
+            const url = video.thumbnail.url
+            const public_id = extractPublicId(url);
+            await deleteFromColudinary(public_id)
         }
 
-        const deletedVideo = await Video.findByIdAndDelete(videoId)
+        const deletedVideo = await Video.findOneAndDelete({
+            _id:videoId,
+            owner:req.user._id
+        })
 
         return res
             .status(200)

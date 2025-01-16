@@ -3,16 +3,20 @@ import {
     addTweet,
     getUserTweets,
     updateTweet,
-    deleteTweet
+    deleteTweet,
+    getTweetById
 } from "../controllers/tweet.controllers.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
-
+router.use(verifyJWT)
 router.route("/")
-    .post(verifyJWT,addTweet)
-    .get(verifyJWT,getUserTweets)
-    .patch(verifyJWT,updateTweet)
-    .delete(verifyJWT,deleteTweet)
+    .post(addTweet)
+router.route("/:userId")
+    .get(getUserTweets)
+router.route("/tweet/:tweetId")
+    .get(getTweetById)
+    .patch(updateTweet)
+    .delete(deleteTweet)
 
 export default router

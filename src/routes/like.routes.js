@@ -9,10 +9,11 @@ import {
 
 const router = Router()
 
+router.use(verifyJWT)
 
-router.route("/video/:videoId").post(verifyJWT, toggleVideoLike)
-router.route("/comment/:commentId").post(verifyJWT, toggleCommentLike)
-router.route("/tweet/:tweetId").post(verifyJWT, toggleTweetLike)
-router.route("/videos").get(verifyJWT, allLikedVideos)
+router.route("/video/:videoId").post(toggleVideoLike)
+router.route("/comment/:commentId").post(toggleCommentLike)
+router.route("/tweet/:tweetId").post(toggleTweetLike)
+router.route("/videos").get(allLikedVideos)
 
 export default router
